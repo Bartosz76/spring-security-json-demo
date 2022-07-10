@@ -1,5 +1,6 @@
 package bm.app.springsecurityjsondemo.config;
 
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -17,13 +18,41 @@ import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 @EnableWebSecurity(debug = true) //'"debug = true" for the development stage.
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
-//    @Override
+    private RestAuthenticationSuccessHandler authenticationSuccessHandler;
+    private RestAuthenticationFailureHandler authenticationFailureHandler;
+
+    public SecurityConfig(RestAuthenticationSuccessHandler authenticationSuccessHandler, RestAuthenticationFailureHandler authenticationFailureHandler) {
+        this.authenticationSuccessHandler = authenticationSuccessHandler;
+        this.authenticationFailureHandler = authenticationFailureHandler;
+    }
+
+    public SecurityConfig(boolean disableDefaults, RestAuthenticationSuccessHandler authenticationSuccessHandler, RestAuthenticationFailureHandler authenticationFailureHandler) {
+        super(disableDefaults);
+        this.authenticationSuccessHandler = authenticationSuccessHandler;
+        this.authenticationFailureHandler = authenticationFailureHandler;
+    }
+
+    //    @Override
 //    protected void configure(AuthenticationManagerBuilder builder) throws Exception {
 //        builder.inMemoryAuthentication()
 //                .withUser("user")
 //                .password("password")
 //                .roles("USER");
 //    }
+
+    /**
+     * The instance of the filter needs to be configured so that it utilizes the default authentication manager
+     * and I need to set my own implementation of successHandler and failureHandler to allow the disposal of
+     * the redirection upon the log in.
+     */
+    @Bean
+    public JsonObjectAuthenticationFilter authenticationFilter() throws Exception {
+        JsonObjectAuthenticationFilter filter = new JsonObjectAuthenticationFilter();
+        filter.setAuthenticationSuccessHandler(authenticationSuccessHandler);
+        filter.setAuthenticationFailureHandler(authenticationFailureHandler);
+        filter.setAuthenticationManager(super.authenticationManager());
+        return filter;
+    }
 
     /**
      * By default upon reaching any endpoint, I will be automatically redirected to the
