@@ -47,7 +47,4 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 //The above two lines mean that upon reaching the secured endpoint, I will
                 //get the 401 unauthorized error instead of being redirected to the logging form.
     }
-
-
-
 }
