@@ -9,36 +9,20 @@ import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-/**
- * Configure (AuthenticationManagerBuilder) method configures the list of users in memory
- * (allows for the configuration of any number of users).
- */
 @Configuration
-@EnableWebSecurity(debug = true) //'"debug = true" for the development stage.
+@EnableWebSecurity
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     private RestAuthenticationSuccessHandler authenticationSuccessHandler;
     private RestAuthenticationFailureHandler authenticationFailureHandler;
 
-    public SecurityConfig(RestAuthenticationSuccessHandler authenticationSuccessHandler, RestAuthenticationFailureHandler authenticationFailureHandler) {
+    public SecurityConfig(RestAuthenticationSuccessHandler authenticationSuccessHandler,
+                          RestAuthenticationFailureHandler authenticationFailureHandler) {
         this.authenticationSuccessHandler = authenticationSuccessHandler;
         this.authenticationFailureHandler = authenticationFailureHandler;
     }
-
-    public SecurityConfig(boolean disableDefaults, RestAuthenticationSuccessHandler authenticationSuccessHandler, RestAuthenticationFailureHandler authenticationFailureHandler) {
-        super(disableDefaults);
-        this.authenticationSuccessHandler = authenticationSuccessHandler;
-        this.authenticationFailureHandler = authenticationFailureHandler;
-    }
-
-    //    @Override
-//    protected void configure(AuthenticationManagerBuilder builder) throws Exception {
-//        builder.inMemoryAuthentication()
-//                .withUser("user")
-//                .password("password")
-//                .roles("USER");
-//    }
 
     /**
      * The instance of the filter needs to be configured so that it utilizes the default authentication manager
@@ -69,11 +53,22 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers("/").permitAll() //Allowing the access to root context (/) without logging.
                 .anyRequest().authenticated()
                 .and()
-                .formLogin().permitAll() //Allowing the access the form without logging.
-                .and()
+                .addFilterBefore(authenticationFilter(), UsernamePasswordAuthenticationFilter.class)
                 .exceptionHandling()
                 .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED));
                 //The above two lines mean that upon reaching the secured endpoint, I will
                 //get the 401 unauthorized error instead of being redirected to the logging form.
+    }
+
+    /**
+     * Configure (AuthenticationManagerBuilder) method configures the list of users in memory
+     * (allows for the configuration of any number of users).
+     */
+    @Override
+    protected void configure(AuthenticationManagerBuilder builder) throws Exception {
+        builder.inMemoryAuthentication()
+                .withUser("user")
+                .password("password")
+                .roles("USER");
     }
 }
