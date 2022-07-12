@@ -12,7 +12,7 @@ public class HelloController {
         return new MessageDto("Hello!");
     }
 
-    @GetMapping("/")
+    @GetMapping("/secured")
     public MessageDto helloSecured() {
         return new MessageDto("Hello but secured!");
     }
